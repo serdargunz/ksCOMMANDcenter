@@ -1,20 +1,33 @@
 import { useState } from "react";
+import { DEFAULT_MODEL } from "../storage";
 
 interface Props {
   goal: number;
   apiKey: string;
+  model: string;
   onClose: () => void;
-  onSave: (goal: number, apiKey: string) => void;
+  onSave: (goal: number, apiKey: string, model: string) => void;
 }
 
-/** Settings sheet: daily calorie goal + the Gemini API key (stored locally). */
-export default function SettingsSheet({ goal, apiKey, onClose, onSave }: Props) {
+/** Settings sheet: daily calorie goal, Gemini API key, and model (all local). */
+export default function SettingsSheet({
+  goal,
+  apiKey,
+  model,
+  onClose,
+  onSave,
+}: Props) {
   const [goalValue, setGoalValue] = useState(String(goal));
   const [keyValue, setKeyValue] = useState(apiKey);
+  const [modelValue, setModelValue] = useState(model);
 
   function save() {
     const n = parseInt(goalValue, 10);
-    onSave(Number.isFinite(n) && n > 0 ? n : goal, keyValue.trim());
+    onSave(
+      Number.isFinite(n) && n > 0 ? n : goal,
+      keyValue.trim(),
+      modelValue.trim() || DEFAULT_MODEL,
+    );
   }
 
   return (
@@ -78,6 +91,44 @@ export default function SettingsSheet({ goal, apiKey, onClose, onSave }: Props) 
               Google AI Studio
             </a>
             . Stored only on this device.
+          </p>
+
+          <label
+            htmlFor="model-input"
+            style={{
+              display: "block",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.4px",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+              margin: "18px 0 6px",
+            }}
+          >
+            Model (advanced)
+          </label>
+          <input
+            id="model-input"
+            type="text"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            placeholder={DEFAULT_MODEL}
+            value={modelValue}
+            onChange={(e) => setModelValue(e.target.value)}
+            style={{
+              width: "100%",
+              border: "none",
+              borderBottom: "2px solid var(--border)",
+              background: "transparent",
+              fontSize: 16,
+              padding: "10px 2px",
+              color: "var(--text)",
+            }}
+          />
+          <p className="note" style={{ margin: "10px 0 0" }}>
+            Leave as <code>gemini-2.5-flash</code> unless you hit limits — then try{" "}
+            <code>gemini-2.5-flash-lite</code> (highest free quota).
           </p>
         </div>
 

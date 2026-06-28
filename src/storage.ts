@@ -3,8 +3,13 @@ import type { LoggedMeal } from "./types";
 const MEALS_KEY = "snapcal.meals.v1";
 const GOAL_KEY = "snapcal.goal.v1";
 const APIKEY_KEY = "snapcal.gemini_key.v1";
+const MODEL_KEY = "snapcal.model.v1";
 
 const DEFAULT_GOAL = 2000;
+
+// A current Gemini model that has free-tier quota and supports vision.
+// gemini-2.5-flash-lite has even higher free limits if you need them.
+export const DEFAULT_MODEL = "gemini-2.5-flash";
 
 /** Local YYYY-MM-DD for a given date (defaults to now). */
 export function localDay(date = new Date()): string {
@@ -63,6 +68,24 @@ export function loadApiKey(): string {
 export function saveApiKey(key: string): void {
   try {
     localStorage.setItem(APIKEY_KEY, key.trim());
+  } catch {
+    // ignore
+  }
+}
+
+/** Which Gemini model to use (advanced; defaults to DEFAULT_MODEL). */
+export function loadModel(): string {
+  try {
+    const v = localStorage.getItem(MODEL_KEY);
+    return v && v.trim() ? v.trim() : DEFAULT_MODEL;
+  } catch {
+    return DEFAULT_MODEL;
+  }
+}
+
+export function saveModel(model: string): void {
+  try {
+    localStorage.setItem(MODEL_KEY, (model.trim() || DEFAULT_MODEL));
   } catch {
     // ignore
   }

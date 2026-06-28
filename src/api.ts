@@ -1,8 +1,5 @@
 import type { AnalysisResult } from "./types";
-
-// Free-tier, vision-capable Gemini model. Called directly from the browser
-// with the user's own key (stored locally) — no backend involved.
-const GEMINI_MODEL = "gemini-2.0-flash";
+import { DEFAULT_MODEL } from "./storage";
 
 const SYSTEM_PROMPT = `You are a nutrition estimation assistant for a calorie-tracking app.
 You receive a single photo of a meal and estimate its nutrition.
@@ -80,13 +77,14 @@ export async function analyzePhoto(
   base64: string,
   mediaType: string,
   apiKey: string,
+  model: string = DEFAULT_MODEL,
 ): Promise<AnalysisResult> {
   if (!apiKey) {
     throw new Error("No Gemini API key set. Add it in Settings (🎯) first.");
   }
 
   const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent` +
+    `https://generativelanguage.googleapis.com/v1beta/models/${model || DEFAULT_MODEL}:generateContent` +
     `?key=${encodeURIComponent(apiKey)}`;
 
   const body = {
@@ -138,10 +136,15 @@ export async function analyzePhoto(
     if (res.status === 400 && /api key|api_key/i.test(detail)) {
       throw new Error("That Gemini API key looks invalid. Re-check it in Settings.");
     }
+    if (res.status === 404 || /not found|is not supported|unknown name/i.test(detail)) {
+      throw new Error(
+        `Model "${model}" isn't available for this key. Try "gemini-2.5-flash" or "gemini-2.5-flash-lite" in Settings.`,
+      );
+    }
     if (res.status === 429) {
       throw new Error(
-        "Gemini's free tier is busy right now. Wait a minute and try again. " +
-          "(If it keeps happening, your key's daily free quota may be used up — it resets each day.)",
+        "Gemini's free tier limit was hit for this model. In Settings, try the model " +
+          '"gemini-2.5-flash-lite" (highest free limit), or wait a minute and retry.',
       );
     }
     if (res.status === 403) {

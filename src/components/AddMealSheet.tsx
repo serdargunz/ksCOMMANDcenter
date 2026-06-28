@@ -5,6 +5,7 @@ import { localDay } from "../storage";
 
 interface Props {
   apiKey: string;
+  model: string;
   onClose: () => void;
   onAdd: (meal: LoggedMeal) => void;
   onNeedKey: () => void;
@@ -41,7 +42,7 @@ function NumberField({
   );
 }
 
-export default function AddMealSheet({ apiKey, onClose, onAdd, onNeedKey }: Props) {
+export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey }: Props) {
   const [phase, setPhase] = useState<Phase>(apiKey ? "choosing" : "needkey");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
@@ -83,7 +84,7 @@ export default function AddMealSheet({ apiKey, onClose, onAdd, onNeedKey }: Prop
 
     try {
       const { base64, mediaType } = await fileToBase64(file);
-      const res = await analyzePhoto(base64, mediaType, apiKey);
+      const res = await analyzePhoto(base64, mediaType, apiKey, model);
 
       if (!res.is_food) {
         setError(

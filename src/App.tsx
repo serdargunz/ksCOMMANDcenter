@@ -7,16 +7,19 @@ import {
   loadApiKey,
   loadGoal,
   loadMeals,
+  loadModel,
   localDay,
   saveApiKey,
   saveGoal,
   saveMeals,
+  saveModel,
 } from "./storage";
 
 export default function App() {
   const [meals, setMeals] = useState<LoggedMeal[]>(() => loadMeals());
   const [goal, setGoal] = useState<number>(() => loadGoal());
   const [apiKey, setApiKey] = useState<string>(() => loadApiKey());
+  const [model, setModel] = useState<string>(() => loadModel());
   const [showAdd, setShowAdd] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -26,6 +29,7 @@ export default function App() {
   useEffect(() => saveMeals(meals), [meals]);
   useEffect(() => saveGoal(goal), [goal]);
   useEffect(() => saveApiKey(apiKey), [apiKey]);
+  useEffect(() => saveModel(model), [model]);
 
   const todaysMeals = useMemo(
     () =>
@@ -129,6 +133,7 @@ export default function App() {
       {showAdd && (
         <AddMealSheet
           apiKey={apiKey}
+          model={model}
           onClose={() => setShowAdd(false)}
           onAdd={addMeal}
           onNeedKey={() => {
@@ -141,10 +146,12 @@ export default function App() {
         <SettingsSheet
           goal={goal}
           apiKey={apiKey}
+          model={model}
           onClose={() => setShowSettings(false)}
-          onSave={(g, k) => {
+          onSave={(g, k, m) => {
             setGoal(g);
             setApiKey(k);
+            setModel(m);
             setShowSettings(false);
           }}
         />
