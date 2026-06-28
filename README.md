@@ -14,9 +14,9 @@ meal**, take a picture, and it's logged.
 ## How it works
 
 1. **You take a photo** of your food (camera opens automatically on phones).
-2. The photo is sent to a small serverless function that calls **Claude's vision
-   model**, which identifies the food, estimates portion sizes, and returns
-   calories + protein / carbs / fat.
+2. The photo is sent to a small serverless function that calls **Google
+   Gemini's vision model** (free tier), which identifies the food, estimates
+   portion sizes, and returns calories + protein / carbs / fat.
 3. You get an editable result card — tweak anything if you like — and tap
    **Add to today**.
 4. Your daily total updates against your goal. Everything is saved on your
@@ -30,16 +30,16 @@ and today's list.
 ## Tech overview
 
 - **Frontend:** React + TypeScript + Vite. Mobile-first, single screen.
-- **AI engine:** Claude vision (`claude-opus-4-8`) via the Anthropic SDK, using
-  [structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
-  so the nutrition numbers come back as clean, validated JSON.
+- **AI engine:** Google Gemini vision (`gemini-2.0-flash`, free tier) called over
+  its REST API with a JSON `responseSchema`, so the nutrition numbers come back
+  as clean, validated JSON. (Also accepts iPhone HEIC photos.)
 - **Backend:** one Netlify serverless function (`netlify/functions/analyze.mts`)
   that keeps your API key secret — the key never touches the browser.
 - **Storage:** the daily log lives in the browser's `localStorage`. No database,
   no accounts, fully private to the device.
 
 ```
-Browser  ──photo──▶  /.netlify/functions/analyze  ──▶  Claude vision  ──▶  calories
+Browser  ──photo──▶  /.netlify/functions/analyze  ──▶  Gemini vision  ──▶  calories
    ▲                                                                          │
    └──────────────────────  localStorage (your log)  ◀──────────────────────┘
 ```
@@ -48,8 +48,8 @@ Browser  ──photo──▶  /.netlify/functions/analyze  ──▶  Claude vi
 
 ## Deploy to Netlify (get a shareable link)
 
-You need an **Anthropic API key** — create one at
-<https://console.anthropic.com/settings/keys>.
+You need a **free Google Gemini API key** — create one at
+<https://aistudio.google.com/app/apikey>.
 
 ### Option A — via the Netlify website
 
@@ -60,9 +60,9 @@ You need an **Anthropic API key** — create one at
 3. Before/after the first deploy, go to **Site settings → Environment
    variables** and add:
 
-   | Key                 | Value              |
-   | ------------------- | ------------------ |
-   | `ANTHROPIC_API_KEY` | your `sk-ant-…` key |
+   | Key              | Value                          |
+   | ---------------- | ------------------------------ |
+   | `GEMINI_API_KEY` | your Gemini key (from AI Studio) |
 
 4. Trigger a deploy. Netlify gives you a public URL — share it with whoever
    will be using the tracker. That's it.
@@ -74,7 +74,7 @@ npm install
 npm install -g netlify-cli
 netlify deploy --build --prod
 # then set the key once:
-netlify env:set ANTHROPIC_API_KEY "sk-ant-..."
+netlify env:set GEMINI_API_KEY "your-gemini-key"
 netlify deploy --build --prod
 ```
 
@@ -87,7 +87,7 @@ The app needs the serverless function running too, so use the Netlify dev server
 
 ```bash
 npm install
-cp .env.example .env          # then put your real ANTHROPIC_API_KEY in .env
+cp .env.example .env          # then put your real GEMINI_API_KEY in .env
 npm install -g netlify-cli    # if you don't have it
 netlify dev                   # serves the app + the function together
 ```
