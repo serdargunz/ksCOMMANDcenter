@@ -2,6 +2,7 @@ import type { LoggedMeal } from "./types";
 
 const MEALS_KEY = "snapcal.meals.v1";
 const GOAL_KEY = "snapcal.goal.v1";
+const APIKEY_KEY = "snapcal.gemini_key.v1";
 
 const DEFAULT_GOAL = 2000;
 
@@ -45,6 +46,23 @@ export function loadGoal(): number {
 export function saveGoal(goal: number): void {
   try {
     localStorage.setItem(GOAL_KEY, String(goal));
+  } catch {
+    // ignore
+  }
+}
+
+/** The user's Gemini API key, stored only in this browser. */
+export function loadApiKey(): string {
+  try {
+    return localStorage.getItem(APIKEY_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function saveApiKey(key: string): void {
+  try {
+    localStorage.setItem(APIKEY_KEY, key.trim());
   } catch {
     // ignore
   }

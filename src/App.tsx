@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import CalorieRing from "./components/CalorieRing";
 import AddMealSheet from "./components/AddMealSheet";
-import GoalSheet from "./components/GoalSheet";
+import SettingsSheet from "./components/SettingsSheet";
 import type { LoggedMeal } from "./types";
 import {
+  loadApiKey,
   loadGoal,
   loadMeals,
   localDay,
+  saveApiKey,
   saveGoal,
   saveMeals,
 } from "./storage";
@@ -14,14 +16,16 @@ import {
 export default function App() {
   const [meals, setMeals] = useState<LoggedMeal[]>(() => loadMeals());
   const [goal, setGoal] = useState<number>(() => loadGoal());
+  const [apiKey, setApiKey] = useState<string>(() => loadApiKey());
   const [showAdd, setShowAdd] = useState(false);
-  const [showGoal, setShowGoal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const today = localDay();
 
   // Persist on change.
   useEffect(() => saveMeals(meals), [meals]);
   useEffect(() => saveGoal(goal), [goal]);
+  useEffect(() => saveApiKey(apiKey), [apiKey]);
 
   const todaysMeals = useMemo(
     () =>
@@ -62,8 +66,8 @@ export default function App() {
         </h1>
         <button
           className="icon-btn"
-          aria-label="Set daily goal"
-          onClick={() => setShowGoal(true)}
+          aria-label="Settings"
+          onClick={() => setShowSettings(true)}
         >
           🎯
         </button>
@@ -123,15 +127,25 @@ export default function App() {
       </button>
 
       {showAdd && (
-        <AddMealSheet onClose={() => setShowAdd(false)} onAdd={addMeal} />
+        <AddMealSheet
+          apiKey={apiKey}
+          onClose={() => setShowAdd(false)}
+          onAdd={addMeal}
+          onNeedKey={() => {
+            setShowAdd(false);
+            setShowSettings(true);
+          }}
+        />
       )}
-      {showGoal && (
-        <GoalSheet
+      {showSettings && (
+        <SettingsSheet
           goal={goal}
-          onClose={() => setShowGoal(false)}
-          onSave={(g) => {
+          apiKey={apiKey}
+          onClose={() => setShowSettings(false)}
+          onSave={(g, k) => {
             setGoal(g);
-            setShowGoal(false);
+            setApiKey(k);
+            setShowSettings(false);
           }}
         />
       )}

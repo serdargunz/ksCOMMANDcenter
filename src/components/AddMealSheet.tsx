@@ -4,11 +4,13 @@ import type { AnalysisResult, LoggedMeal } from "../types";
 import { localDay } from "../storage";
 
 interface Props {
+  apiKey: string;
   onClose: () => void;
   onAdd: (meal: LoggedMeal) => void;
+  onNeedKey: () => void;
 }
 
-type Phase = "choosing" | "analyzing" | "review" | "error";
+type Phase = "needkey" | "choosing" | "analyzing" | "review" | "error";
 
 /** Editable, numeric-only field used for calories and macros. */
 function NumberField({
@@ -39,8 +41,8 @@ function NumberField({
   );
 }
 
-export default function AddMealSheet({ onClose, onAdd }: Props) {
-  const [phase, setPhase] = useState<Phase>("choosing");
+export default function AddMealSheet({ apiKey, onClose, onAdd, onNeedKey }: Props) {
+  const [phase, setPhase] = useState<Phase>(apiKey ? "choosing" : "needkey");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -54,10 +56,11 @@ export default function AddMealSheet({ onClose, onAdd }: Props) {
 
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Open the photo picker immediately when the sheet appears.
+  // Open the photo picker immediately when the sheet appears — but only if a
+  // key is set. Otherwise show the "add your key" panel first.
   useEffect(() => {
-    fileRef.current?.click();
-  }, []);
+    if (apiKey) fileRef.current?.click();
+  }, [apiKey]);
 
   // Revoke the object URL when it changes/unmounts to avoid leaks.
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function AddMealSheet({ onClose, onAdd }: Props) {
 
     try {
       const { base64, mediaType } = await fileToBase64(file);
-      const res = await analyzePhoto(base64, mediaType);
+      const res = await analyzePhoto(base64, mediaType, apiKey);
 
       if (!res.is_food) {
         setError(
@@ -133,6 +136,22 @@ export default function AddMealSheet({ onClose, onAdd }: Props) {
           style={{ display: "none" }}
           onChange={handleFile}
         />
+
+        {phase === "needkey" && (
+          <>
+            <h2>One-time setup</h2>
+            <p className="note">
+              To read calories from photos, the app needs a free Google Gemini
+              key. It's stored only on this device — never uploaded anywhere.
+            </p>
+            <button className="btn btn-primary" onClick={onNeedKey}>
+              Add my free key
+            </button>
+            <button className="btn btn-ghost" onClick={onClose}>
+              Cancel
+            </button>
+          </>
+        )}
 
         {phase === "choosing" && (
           <>
