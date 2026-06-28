@@ -108,15 +108,23 @@ export async function analyzePhoto(
     },
   };
 
+  // The free tier occasionally returns 429 on a per-minute basis. Retry a few
+  // times with backoff so transient limits don't surface as an error.
+  const MAX_ATTEMPTS = 3;
   let res: Response;
-  try {
-    res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new Error("Couldn't reach Gemini. Check your internet connection.");
+  for (let attempt = 1; ; attempt++) {
+    try {
+      res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      throw new Error("Couldn't reach Gemini. Check your internet connection.");
+    }
+    if (res.status !== 429 || attempt >= MAX_ATTEMPTS) break;
+    // Wait 4s, then 8s, before retrying.
+    await new Promise((r) => setTimeout(r, attempt * 4000));
   }
 
   if (!res.ok) {
@@ -131,7 +139,10 @@ export async function analyzePhoto(
       throw new Error("That Gemini API key looks invalid. Re-check it in Settings.");
     }
     if (res.status === 429) {
-      throw new Error("Free-tier rate limit hit. Wait a moment and try again.");
+      throw new Error(
+        "Gemini's free tier is busy right now. Wait a minute and try again. " +
+          "(If it keeps happening, your key's daily free quota may be used up — it resets each day.)",
+      );
     }
     if (res.status === 403) {
       throw new Error("Gemini rejected the key (403). Make sure it's enabled in AI Studio.");
