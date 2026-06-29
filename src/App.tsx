@@ -24,6 +24,11 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
 
   const today = localDay();
+  const prettyToday = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
 
   // Persist on change.
   useEffect(() => saveMeals(meals), [meals]);
@@ -65,9 +70,12 @@ export default function App() {
   return (
     <>
       <header className="app-header">
-        <h1>
-          <span className="logo">🥗</span> SnapCal
-        </h1>
+        <div>
+          <h1>
+            <span className="logo">🥗</span> SnapCal
+          </h1>
+          <div className="subtitle">{prettyToday}</div>
+        </div>
         <button
           className="icon-btn"
           aria-label="Settings"
@@ -99,6 +107,7 @@ export default function App() {
 
       {todaysMeals.length === 0 ? (
         <div className="empty">
+          <span className="empty-emoji">📸</span>
           No meals logged yet.
           <br />
           Tap the button below to snap your first one.
@@ -113,7 +122,10 @@ export default function App() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div className="meal-cal">{m.calories}</div>
+              <div className="meal-cal">
+                {m.calories}
+                <small>kcal</small>
+              </div>
               <button
                 className="meal-del"
                 aria-label={`Delete ${m.name}`}

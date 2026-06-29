@@ -73,11 +73,11 @@ export default function SettingsSheet({
             style={{
               width: "100%",
               border: "none",
-              borderBottom: "2px solid var(--border)",
+              borderBottom: "2px solid var(--line)",
               background: "transparent",
               fontSize: 16,
               padding: "10px 2px",
-              color: "var(--text)",
+              color: "var(--ink)",
             }}
           />
           <p className="note" style={{ margin: "12px 0 0" }}>
@@ -86,7 +86,7 @@ export default function SettingsSheet({
               href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "var(--green-dark)", fontWeight: 600 }}
+              style={{ color: "var(--accent-press)", fontWeight: 600 }}
             >
               Google AI Studio
             </a>
@@ -119,11 +119,11 @@ export default function SettingsSheet({
             style={{
               width: "100%",
               border: "none",
-              borderBottom: "2px solid var(--border)",
+              borderBottom: "2px solid var(--line)",
               background: "transparent",
               fontSize: 16,
               padding: "10px 2px",
-              color: "var(--text)",
+              color: "var(--ink)",
             }}
           />
           <p className="note" style={{ margin: "10px 0 0" }}>
