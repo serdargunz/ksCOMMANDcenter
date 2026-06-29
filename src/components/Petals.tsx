@@ -8,9 +8,12 @@ interface Petal {
   swaySpeed: number;
   phase: number;
   vy: number;
+  vx: number;
   rot: number;
   vr: number;
   hue: number;
+  sat: number;
+  light: number;
   alpha: number;
 }
 
@@ -53,17 +56,23 @@ export default function Petals() {
     const count = Math.round(Math.min(22, Math.max(9, w / 38)));
 
     function make(initial: boolean): Petal {
+      // Sakura blush mix: some near-white, some soft pink.
+      const pale = Math.random() < 0.5;
       return {
-        x: rnd(0, w),
-        y: initial ? rnd(0, h) : rnd(-50, -10),
+        // Emit from the branch in the top-right; spread on first fill.
+        x: initial ? rnd(0.25 * w, w) : rnd(0.5 * w, w + 40),
+        y: initial ? rnd(-20, h) : rnd(-44, 90),
         r: rnd(5.5, 11),
-        sway: rnd(18, 52),
+        sway: rnd(16, 46),
         swaySpeed: rnd(0.5, 1.2),
         phase: rnd(0, Math.PI * 2),
-        vy: rnd(13, 28),
+        vy: rnd(13, 27),
+        vx: rnd(-26, -8),
         rot: rnd(0, Math.PI * 2),
         vr: rnd(-0.7, 0.7),
-        hue: rnd(338, 350),
+        hue: rnd(340, 352),
+        sat: pale ? rnd(45, 68) : rnd(80, 96),
+        light: pale ? rnd(90, 96) : rnd(80, 88),
         alpha: rnd(0.55, 0.9),
       };
     }
@@ -73,13 +82,16 @@ export default function Petals() {
 
     function draw(p: Petal) {
       const g = ctx!.createRadialGradient(0, 0, 0, 0, 0, p.r);
-      g.addColorStop(0, `hsla(${p.hue}, 92%, 92%, ${p.alpha})`);
-      g.addColorStop(1, `hsla(${p.hue}, 84%, 80%, ${p.alpha * 0.82})`);
+      g.addColorStop(0, `hsla(${p.hue}, ${p.sat}%, ${p.light}%, ${p.alpha})`);
+      g.addColorStop(
+        1,
+        `hsla(${p.hue}, ${p.sat}%, ${Math.max(p.light - 12, 66)}%, ${p.alpha * 0.82})`,
+      );
       ctx!.save();
       ctx!.translate(p.x + Math.sin(p.phase) * p.sway, p.y);
       ctx!.rotate(p.rot);
       ctx!.scale(1, 0.6);
-      ctx!.shadowColor = `hsla(${p.hue}, 90%, 80%, 0.5)`;
+      ctx!.shadowColor = `hsla(${p.hue}, 85%, 82%, 0.5)`;
       ctx!.shadowBlur = 6;
       ctx!.fillStyle = g;
       ctx!.beginPath();
@@ -100,9 +112,10 @@ export default function Petals() {
       ctx!.clearRect(0, 0, w, h);
       for (const p of petals) {
         p.y += p.vy * dt;
+        p.x += p.vx * dt;
         p.phase += p.swaySpeed * dt;
         p.rot += p.vr * dt;
-        if (p.y - 24 > h) Object.assign(p, make(false));
+        if (p.y - 24 > h || p.x + p.sway < -30) Object.assign(p, make(false));
         draw(p);
       }
       if (running) raf = requestAnimationFrame(frame);
