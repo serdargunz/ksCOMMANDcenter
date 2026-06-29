@@ -89,15 +89,27 @@ export default function App() {
         <CalorieRing consumed={totals.calories} goal={goal} />
         <div className="macros">
           <div className="macro">
-            <div className="v">{totals.protein} g</div>
+            <span className="macro-dot" style={{ background: "#34d399" }} />
+            <div className="v">
+              {totals.protein}
+              <span className="g">g</span>
+            </div>
             <div className="k">Protein</div>
           </div>
           <div className="macro">
-            <div className="v">{totals.carbs} g</div>
+            <span className="macro-dot" style={{ background: "#fbbf24" }} />
+            <div className="v">
+              {totals.carbs}
+              <span className="g">g</span>
+            </div>
             <div className="k">Carbs</div>
           </div>
           <div className="macro">
-            <div className="v">{totals.fat} g</div>
+            <span className="macro-dot" style={{ background: "#f472b6" }} />
+            <div className="v">
+              {totals.fat}
+              <span className="g">g</span>
+            </div>
             <div className="k">Fat</div>
           </div>
         </div>
