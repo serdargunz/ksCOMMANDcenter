@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import CalorieRing from "./components/CalorieRing";
 import AddMealSheet from "./components/AddMealSheet";
 import SettingsSheet from "./components/SettingsSheet";
+import Petals from "./components/Petals";
 import type { LoggedMeal } from "./types";
 import {
   loadApiKey,
@@ -69,6 +70,8 @@ export default function App() {
 
   return (
     <>
+      <Petals />
+      <div className="app-content">
       <header className="app-header">
         <div>
           <h1>
@@ -153,6 +156,7 @@ export default function App() {
       <button className="fab" onClick={() => setShowAdd(true)}>
         <span className="plus">＋</span> Snap a meal
       </button>
+      </div>
 
       {showAdd && (
         <AddMealSheet

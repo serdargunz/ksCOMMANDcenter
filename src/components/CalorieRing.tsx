@@ -7,8 +7,8 @@ interface Props {
 
 /** Animates a number from its previous value to the target on change. */
 function useCountUp(target: number, duration = 600): number {
-  const [value, setValue] = useState(target);
-  const fromRef = useRef(target);
+  const [value, setValue] = useState(0);
+  const fromRef = useRef(0);
   const rafRef = useRef<number>();
 
   useEffect(() => {
@@ -44,11 +44,18 @@ export default function CalorieRing({ consumed, goal }: Props) {
   const circumference = 2 * Math.PI * radius;
 
   const ratio = goal > 0 ? consumed / goal : 0;
-  const dash = circumference * Math.min(ratio, 1);
   const over = consumed > goal;
   const remaining = goal - consumed;
 
   const display = useCountUp(consumed);
+
+  // Animate the ring drawing in from empty on first mount.
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setDrawn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const dash = drawn ? circumference * Math.min(ratio, 1) : 0;
 
   return (
     <div className="ring-wrap">
