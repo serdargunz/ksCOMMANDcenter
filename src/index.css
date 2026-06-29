@@ -592,6 +592,16 @@ body {
 .btn-primary:disabled {
   opacity: 0.5;
 }
+.btn-soft {
+  background: var(--glass);
+  color: var(--ink);
+  border: 1px solid var(--glass-border);
+  margin-top: 10px;
+}
+.btn-soft:active {
+  transform: scale(0.985);
+  background: var(--glass-strong);
+}
 .btn-ghost {
   background: transparent;
   color: var(--muted);

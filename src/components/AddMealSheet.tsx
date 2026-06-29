@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { analyzePhoto, fileToBase64 } from "../api";
 import type { AnalysisResult, LoggedMeal } from "../types";
 import { localDay } from "../storage";
@@ -11,7 +11,14 @@ interface Props {
   onNeedKey: () => void;
 }
 
-type Phase = "needkey" | "choosing" | "analyzing" | "review" | "error";
+type Phase =
+  | "choose"
+  | "needkey"
+  | "capturing"
+  | "analyzing"
+  | "review"
+  | "manual"
+  | "error";
 
 /** Editable, numeric-only field used for calories and macros. */
 function NumberField({
@@ -42,13 +49,19 @@ function NumberField({
   );
 }
 
-export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey }: Props) {
-  const [phase, setPhase] = useState<Phase>(apiKey ? "choosing" : "needkey");
+export default function AddMealSheet({
+  apiKey,
+  model,
+  onClose,
+  onAdd,
+  onNeedKey,
+}: Props) {
+  const [phase, setPhase] = useState<Phase>("choose");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
-  // Editable fields, seeded from the analysis but fully user-adjustable.
+  // Editable fields, shared by the photo-review and manual forms.
   const [name, setName] = useState("");
   const [calories, setCalories] = useState(0);
   const [protein, setProtein] = useState(0);
@@ -57,27 +70,33 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
 
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Open the photo picker immediately when the sheet appears — but only if a
-  // key is set. Otherwise show the "add your key" panel first.
-  useEffect(() => {
-    if (apiKey) fileRef.current?.click();
-  }, [apiKey]);
+  function startPhoto() {
+    if (!apiKey) {
+      setPhase("needkey");
+      return;
+    }
+    setPhase("capturing");
+    fileRef.current?.click();
+  }
 
-  // Revoke the object URL when it changes/unmounts to avoid leaks.
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+  function startManual() {
+    setName("");
+    setCalories(0);
+    setProtein(0);
+    setCarbs(0);
+    setFat(0);
+    setError("");
+    setPhase("manual");
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) {
-      // User cancelled the picker without choosing anything.
-      if (phase === "choosing") onClose();
+      if (phase === "capturing") setPhase("choose");
       return;
     }
 
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
     setPhase("analyzing");
     setError("");
@@ -138,38 +157,49 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
           onChange={handleFile}
         />
 
+        {phase === "choose" && (
+          <>
+            <h2>Add a meal</h2>
+            <button className="btn btn-primary" onClick={startPhoto}>
+              📷 Take a photo
+            </button>
+            <button className="btn btn-soft" onClick={startManual}>
+              ✏️ Enter manually
+            </button>
+            <button className="btn btn-ghost" onClick={onClose}>
+              Cancel
+            </button>
+          </>
+        )}
+
         {phase === "needkey" && (
           <>
             <h2>One-time setup</h2>
             <p className="note">
               To read calories from photos, the app needs a free Google Gemini
-              key. It's stored only on this device — never uploaded anywhere.
+              key (stored only on this device). You can also enter meals
+              manually without it.
             </p>
             <button className="btn btn-primary" onClick={onNeedKey}>
               Add my free key
             </button>
-            <button className="btn btn-ghost" onClick={onClose}>
-              Cancel
+            <button className="btn btn-soft" onClick={startManual}>
+              Enter manually instead
+            </button>
+            <button className="btn btn-ghost" onClick={() => setPhase("choose")}>
+              Back
             </button>
           </>
         )}
 
-        {phase === "choosing" && (
-          <>
-            <div className="analyzing">
-              <p>Opening camera…</p>
-            </div>
-            <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
-              Choose a photo
-            </button>
-            <button className="btn btn-ghost" onClick={onClose}>
-              Cancel
-            </button>
-          </>
-        )}
-
-        {previewUrl && phase !== "choosing" && (
+        {previewUrl && (phase === "analyzing" || phase === "review") && (
           <img className="preview-img" src={previewUrl} alt="Your meal" />
+        )}
+
+        {phase === "capturing" && (
+          <div className="analyzing">
+            <p>Opening camera…</p>
+          </div>
         )}
 
         {phase === "analyzing" && (
@@ -182,8 +212,11 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
         {phase === "error" && (
           <>
             <div className="error-box">{error}</div>
-            <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
+            <button className="btn btn-primary" onClick={startPhoto}>
               Try another photo
+            </button>
+            <button className="btn btn-soft" onClick={startManual}>
+              Enter manually
             </button>
             <button className="btn btn-ghost" onClick={onClose}>
               Cancel
@@ -191,20 +224,26 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
           </>
         )}
 
-        {phase === "review" && result && (
+        {(phase === "review" || phase === "manual") && (
           <>
-            <h2>Looks good?</h2>
-            <span className={`confidence ${result.confidence}`}>
-              {result.confidence} confidence
-            </span>
-            {result.note && <p className="note">{result.note}</p>}
+            <h2>{phase === "review" ? "Looks good?" : "Add manually"}</h2>
+            {phase === "review" && result && (
+              <>
+                <span className={`confidence ${result.confidence}`}>
+                  {result.confidence} confidence
+                </span>
+                {result.note && <p className="note">{result.note}</p>}
+              </>
+            )}
 
             <div className="result-card">
               <div className="result-name-row">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Meal name"
                   aria-label="Meal name"
+                  autoFocus={phase === "manual"}
                 />
               </div>
 
@@ -216,7 +255,7 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
               </div>
             </div>
 
-            {result.items.length > 0 && (
+            {phase === "review" && result && result.items.length > 0 && (
               <ul className="items-detail">
                 {result.items.map((it, i) => (
                   <li key={i}>
@@ -229,8 +268,11 @@ export default function AddMealSheet({ apiKey, model, onClose, onAdd, onNeedKey 
             <button className="btn btn-primary" onClick={handleAdd}>
               Add to today
             </button>
-            <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
-              Retake photo
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPhase(phase === "review" ? "choose" : "choose")}
+            >
+              Back
             </button>
           </>
         )}

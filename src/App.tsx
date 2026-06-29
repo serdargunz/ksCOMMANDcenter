@@ -154,7 +154,7 @@ export default function App() {
       )}
 
       <button className="fab" onClick={() => setShowAdd(true)}>
-        <span className="plus">＋</span> Snap a meal
+        <span className="plus">＋</span> Add a meal
       </button>
       </div>
 
