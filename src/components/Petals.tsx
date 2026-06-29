@@ -59,15 +59,14 @@ export default function Petals() {
       // Sakura blush mix: some near-white, some soft pink.
       const pale = Math.random() < 0.5;
       return {
-        // Emit from the branch in the top-right; spread on first fill.
-        x: initial ? rnd(0.25 * w, w) : rnd(0.5 * w, w + 40),
-        y: initial ? rnd(-20, h) : rnd(-44, 90),
+        x: rnd(0, w),
+        y: initial ? rnd(-20, h) : rnd(-50, -10),
         r: rnd(5.5, 11),
         sway: rnd(16, 46),
         swaySpeed: rnd(0.5, 1.2),
         phase: rnd(0, Math.PI * 2),
         vy: rnd(13, 27),
-        vx: rnd(-26, -8),
+        vx: rnd(-10, 4),
         rot: rnd(0, Math.PI * 2),
         vr: rnd(-0.7, 0.7),
         hue: rnd(340, 352),

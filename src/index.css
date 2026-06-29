@@ -67,16 +67,6 @@ body {
   min-height: 100vh;
 }
 
-.sakura-tree {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: min(440px, 86vw);
-  height: auto;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.96;
-}
 .petals {
   position: fixed;
   inset: 0;

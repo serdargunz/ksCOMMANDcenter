@@ -3,7 +3,6 @@ import CalorieRing from "./components/CalorieRing";
 import AddMealSheet from "./components/AddMealSheet";
 import SettingsSheet from "./components/SettingsSheet";
 import Petals from "./components/Petals";
-import SakuraTree from "./components/SakuraTree";
 import type { LoggedMeal } from "./types";
 import {
   loadApiKey,
@@ -71,7 +70,6 @@ export default function App() {
 
   return (
     <>
-      <SakuraTree />
       <Petals />
       <div className="app-content">
       <header className="app-header">
